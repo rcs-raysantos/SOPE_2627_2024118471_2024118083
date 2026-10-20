@@ -1,6 +1,0 @@
-services:
-  sope262720241184712024118083:
-    image: sope262720241184712024118083
-    build:
-      context: .
-      dockerfile: ./Dockerfile
