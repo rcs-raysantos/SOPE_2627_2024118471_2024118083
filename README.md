@@ -175,3 +175,10 @@ O estado de implementação de cada requisito deverá ser atualizado à medida q
 **Linguagem:** C (ANSI C / POSIX)  
 **Avaliação:** Fase 1 — 50% | Fase 2 — 50%
 
+## Objetivos Minishell para a primeira entrega:
+
+- **Eu trato dos requisitos 1.1 e 1.2:** ciclo principal da shell (REPL), integração com o parser, limpeza de memória, execução de comandos externos e implementação dos comandos internos.
+- **Tu tratas dos requisitos 1.3 e 1.4:** execução de comandos em background, sem bloquear o prompt, apresentação do PID e redirecionamentos de entrada, saída e erro (`>`, `>>`, `<` e `2>`).
+- **No requisito 1.5, dividimos assim:** eu implemento os pipes (`|`) entre comandos; tu tratas dos sinais, incluindo `SIGCHLD` com `WNOHANG` para evitar processos zombie e a proteção da shell contra `SIGINT` (Ctrl+C) e `SIGTSTP` (Ctrl+Z).
+
+Vamos combinar as interfaces entre as partes — sobretudo como o parser indica background, redirecionamentos e pipes — antes de integrar, para garantir que os módulos funcionam juntos.
