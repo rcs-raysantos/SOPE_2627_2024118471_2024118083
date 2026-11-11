@@ -5,12 +5,6 @@
 
 #include "header.h"
 
-#define ANSI_GREEN "\x1b[32m"
-#define ANSI_YELLOW "\x1b[33m"
-#define ANSI_BLUE "\x1b[34m"
-#define ANSI_BOLD "\x1b[1m"
-#define ANSI_RESET "\x1b[0m"
-
 void build_prompt(char *str, size_t size){
     char hostname[256], cwd[1024], *username = getenv("USER"); // pega o nome do user
 
@@ -58,11 +52,13 @@ int main(int argc, const char *argv[]) {
         }
         
         parse_line(line);
-        print_command_list();
+        execute_commands();
+        //print_command_list();
         free_command_list();
         
         free(line); // Liberta a memória alocada por readline
     }
     
+    clear_history();
     return 0;
 }
