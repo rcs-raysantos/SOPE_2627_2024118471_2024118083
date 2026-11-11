@@ -32,19 +32,16 @@ void builtin_pwd(void){
 
     if(getcwd(cwd, sizeof(cwd)) != NULL){ // pega o caminho absoluto do diretorio atual
         printf("%s\n", cwd);    
+    } else {
+        perror("cwd: nao conseguiu pegar o caminho absoluto.");
     }
-    perror("cwd: nao conseguiu pegar o caminho absoluto.");
-}
-
-void builtin_exit(void){ 
-    exit(0); // o processo termina normalmente
 }
 
 void builtin_history(void){
     HIST_ENTRY **historico = history_list();
 
     if(historico != NULL){
-        for(int i = 0; historico != NULL; i++){
+        for(int i = 0; historico[i] != NULL; i++){
             printf("%d  %s\n", i + 1, historico[i]->line);
         }
     }
@@ -89,8 +86,7 @@ int execute_int(CMD *cmd){ // 1 = é interno | 0 = é externo
     }
 
     if(strcmp(cmd->name, "exit") == 0){
-        builtin_exit();
-        return 1;
+        return -1; //sinal para terminar!
     }
 
     return 0; 
@@ -116,7 +112,7 @@ void execute_ext(CMD *cmd){
     }
 }
 
-void execute_commands(void){
+int execute_commands(void){
     CMD *aux = command_list;
 
     while(aux != NULL){
@@ -125,10 +121,18 @@ void execute_commands(void){
             continue;
         }
 
-        if(execute_int(aux) == 0){ // executa no pai
-            execute_ext(aux); // executa no filho
+        int val = execute_int(aux); // executa no pai
+
+        if(val == -1){ 
+            return -1; 
         } 
+
+        if(val == 0){
+            execute_ext(aux); // executa no filho
+        }
 
         aux = aux->next;
     }
+
+    return 0;
 }

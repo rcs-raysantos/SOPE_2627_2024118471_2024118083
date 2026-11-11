@@ -21,10 +21,10 @@ void build_prompt(char *str, size_t size){
     }
 
     snprintf(str, size,
-    "%s[msh]%s %s%s@%s%s:%s%s%s$ ", 
-    ANSI_BOLD ANSI_YELLOW, ANSI_RESET, ANSI_BOLD ANSI_GREEN,
-    username, hostname, ANSI_RESET,
-    ANSI_BOLD ANSI_BLUE, cwd, ANSI_RESET);
+        "%s[minishell]%s %s%s@%s%s:%s%s%s ➜ ",
+        ANSI_MAGENTA, ANSI_RESET,
+        ANSI_CYAN, username, hostname, ANSI_RESET,
+        ANSI_YELLOW, cwd, ANSI_RESET);
 }
 
 int main(int argc, const char *argv[]) {
@@ -52,11 +52,17 @@ int main(int argc, const char *argv[]) {
         }
         
         parse_line(line);
-        execute_commands();
-        //print_command_list();
-        free_command_list();
+
+        int status = execute_commands();
         
+        free_command_list();
+        //print_command_list();
+
         free(line); // Liberta a memória alocada por readline
+        
+        if (status == -1) {
+            break; // sai do loop para encerrar o programa
+        }
     }
     
     clear_history();

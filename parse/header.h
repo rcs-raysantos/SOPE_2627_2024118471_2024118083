@@ -15,11 +15,12 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define ANSI_GREEN "\x1b[32m"
-#define ANSI_YELLOW "\x1b[33m"
-#define ANSI_BLUE "\x1b[34m"
-#define ANSI_BOLD "\x1b[1m"
-#define ANSI_RESET "\x1b[0m"
+/* Códigos de cor ANSI compatíveis com Readline (\001 e \002 evitam bugs no terminal) */
+#define ANSI_RESET "\001\x1b[0m\002"
+#define ANSI_BOLD "\001\x1b[1m\002"
+#define ANSI_MAGENTA "\001\x1b[1;35m\002" // Roxo 
+#define ANSI_CYAN "\001\x1b[1;36m\002" // Ciano
+#define ANSI_YELLOW "\001\x1b[1;33m\002" // Amarelo
 
 #define MAXARGS 10
 
@@ -34,21 +35,10 @@ typedef struct command {
 
 extern CMD *command_list;
 
-void build_prompt(char *str, size_t size);
-
-
 CMD *insert_command();
 void free_command_list(void);
 void print_command_list(void);
 void parse_line(char *);
-void build_prompt(char *str, size_t size);
 
-void builtin_help();
-void builtin_cd(CMD *cmd);
-void builtin_pwd();
-void builtin_exit();
-void builtin_history();
-void builtin_echo(CMD *cmd);
-int execute_int(CMD *cmd); // interno
-void execute_ext(CMD *cmd); // externo
-void execute_commands(); // executa ambos
+void build_prompt(char *str, size_t size);
+int execute_commands();
