@@ -1,13 +1,13 @@
 # Compilador e flags
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -Wextra -pedantic -pthread -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -g
 LDFLAGS = -lreadline
 
 # Nome do executável final
 TARGET = parse
 
 # Ficheiros de código fonte e objetos
-SRCS = main.c parse.c
+SRCS = main.c parse.c executor.c
 OBJS = $(SRCS:.c=.o)
 HEADERS = header.h
 
