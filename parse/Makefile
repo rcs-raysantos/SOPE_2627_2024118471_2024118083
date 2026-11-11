@@ -1,6 +1,6 @@
 # Compilador e flags
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -pthread -std=c11
+CFLAGS = -Wall -Wextra -pedantic -pthread -std=c11 -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE -g
 LDFLAGS = -lreadline
 
 # Nome do executável final

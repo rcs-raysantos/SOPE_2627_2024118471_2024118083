@@ -15,6 +15,10 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/* Ativa as funcoes POSIX (strdup, gethostname, chdir, etc.) no modo C11 */
+#define _POSIX_C_SOURCE 200809L
+#define _DEFAULT_SOURCE
+
 /* Códigos de cor ANSI compatíveis com Readline (\001 e \002 evitam bugs no terminal) */
 #define ANSI_RESET "\001\x1b[0m\002"
 #define ANSI_BOLD "\001\x1b[1m\002"

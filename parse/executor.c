@@ -1,7 +1,7 @@
 #include "header.h"
 
 void builtin_help(void){
-    printf("Comandos Internos Disponiveis:\n");
+    printf("-------- COMANDOS INTERNOS DISPONIVEIS: --------\n");
     printf("cd <diretoria> -> Altera a diretoria de trabalho atual.\n");
     printf("pwd -> Mostra o caminho absoluto do diretorio atual.\n");
     printf("exit -> Termina graciosamente a minishell.\n");

@@ -21,7 +21,7 @@ void build_prompt(char *str, size_t size){
     }
 
     snprintf(str, size,
-        "%s[minishell]%s %s%s@%s%s:%s%s%s ➜ ",
+        "%s[msh]%s %s%s@%s%s:%s%s%s ➜ ",
         ANSI_MAGENTA, ANSI_RESET,
         ANSI_CYAN, username, hostname, ANSI_RESET,
         ANSI_YELLOW, cwd, ANSI_RESET);
