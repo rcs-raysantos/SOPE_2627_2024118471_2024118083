@@ -5,36 +5,40 @@
 
 #include "header.h"
 
-#define ANSI_COLOR_RED "\x1b[31m"
-#define ANSI_COLOR_GREEN "\x1b[32m"
-#define ANSI_COLOR_YELLOW "\x1b[33m"
-#define ANSI_COLOR_BLUE "\x1b[34m"
-#define ANSI_COLOR_BOLD "\x1b[1m"
-#define ANSI_COLOR_RESET "\x1b[0m"
+#define ANSI_GREEN "\x1b[32m"
+#define ANSI_YELLOW "\x1b[33m"
+#define ANSI_BLUE "\x1b[34m"
+#define ANSI_BOLD "\x1b[1m"
+#define ANSI_RESET "\x1b[0m"
 
-void build_prompt(){
-    char hostname[256], cwd[1024], *username = getenv("USER");
+void build_prompt(char *str, size_t size){
+    char hostname[256], cwd[1024], *username = getenv("USER"); // pega o nome do user
 
-    if(){
-
+    if(gethostname(hostname, sizeof(hostname)) != 0){ // retorna 0 se funcionar
+        strncpy(hostname, "localhost", sizeof(hostname)); // nome default, ou seja, caso dê errado
     }
 
-    if(){
-
+    if(getcwd(cwd, sizeof(cwd)) == NULL){
+        strncpy(cwd, "??", sizeof(cwd));
     }
 
-    if(){
-
+    if(username == NULL){
+        username = "user";
     }
 
-    snprintf();
+    snprintf(str, size,
+    "%s[msh]%s %s%s@%s%s:%s%s%s$ ", 
+    ANSI_BOLD ANSI_YELLOW, ANSI_RESET, ANSI_BOLD ANSI_GREEN,
+    username, hostname, ANSI_RESET,
+    ANSI_BOLD ANSI_BLUE, cwd, ANSI_RESET);
 }
 
 int main(int argc, const char *argv[]) {
-    char *line;
+    char *line, prompt[2048];
     
     while (1) {
-        line = readline("msh$ ");
+        build_prompt(prompt, sizeof(prompt)); // cria o promptzinho
+        line = readline(prompt); // apresenta pro user
         
         // Trata o sinal EOF (Ctrl+D)
         if (line == NULL) {

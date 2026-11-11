@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -27,6 +28,6 @@ extern CMD *command_list;
 
 
 CMD *insert_command();
-void free_command_list();
-void print_command_list();
+void free_command_list(void);
+void print_command_list(void);
 void parse_line(char *);
