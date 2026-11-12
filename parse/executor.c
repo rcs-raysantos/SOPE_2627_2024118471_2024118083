@@ -145,7 +145,7 @@ int execute_pipe(void){
         }
 
         if(cmd->next != NULL){
-            if(pipe(fds[2]) < 0){
+            if(pipe(fds) < 0){
                 perror("pipe");
                 free(pids);
                 return 0;
