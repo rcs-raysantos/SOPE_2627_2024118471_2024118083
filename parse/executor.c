@@ -103,7 +103,7 @@ void execute_ext(CMD *cmd){
     if (pid == 0){ //filho
         execvp(cmd->name, cmd->argv);
         perror("execvp: comando nao encontrado.");
-        exit(-1);
+        _exit(EXIT_FAILURE);
     }
 
     if (cmd->background){
@@ -112,9 +112,9 @@ void execute_ext(CMD *cmd){
     }
     
     int status;
-    if (waitpid(pid, &status, 0) < 0){
-            perror("waitpid");
-        }
+    if (waitpid(pid, &status, 0) < 0 && errno != ECHILD) {
+        perror("waitpid");
+    }
     
 }
 
@@ -186,7 +186,7 @@ int execute_pipe(void){
             if(prev_fd != -1){ // se houver pipe anterior vamos duplicar o pipe anterior para leitura
                 if(dup2(prev_fd, STDIN_FILENO) < 0){
                     perror("dup2 -> STDIN");
-                    exit(-1);
+                    _exit(EXIT_FAILURE);
                 }
 
                 close(prev_fd); // fecha o duplicado
@@ -197,7 +197,7 @@ int execute_pipe(void){
 
                 if(dup2(fds[1], STDOUT_FILENO) < 0){ 
                     perror("dup2 -> STDOUT");
-                    exit(-1);
+                    _exit(EXIT_FAILURE);
                 }
 
                 close(fds[1]); // fecha o duplicado
@@ -211,7 +211,7 @@ int execute_pipe(void){
 
             execvp(cmd->name, cmd->argv);
             perror("execvp");
-            exit(-1);
+            _exit(EXIT_FAILURE);
         }
 
         pids[cmd_id++] = pid;
