@@ -5,11 +5,34 @@
 
 #include "header.h"
 
+void build_prompt(char *str, size_t size){
+    char hostname[256], cwd[1024], *username = getenv("USER"); // pega o nome do user
+
+    if(gethostname(hostname, sizeof(hostname)) != 0){ // retorna 0 se funcionar
+        strncpy(hostname, "localhost", sizeof(hostname)); // nome default, ou seja, caso dê errado
+    }
+
+    if(getcwd(cwd, sizeof(cwd)) == NULL){
+        strncpy(cwd, "??", sizeof(cwd));
+    }
+
+    if(username == NULL){
+        username = "user";
+    }
+
+    snprintf(str, size,
+        "%s[msh]%s %s%s@%s%s:%s%s%s ➜ ",
+        ANSI_MAGENTA, ANSI_RESET,
+        ANSI_CYAN, username, hostname, ANSI_RESET,
+        ANSI_YELLOW, cwd, ANSI_RESET);
+}
+
 int main(int argc, const char *argv[]) {
-    char *line;
+    char *line, prompt[2048];
     
     while (1) {
-        line = readline("msh$ ");
+        build_prompt(prompt, sizeof(prompt)); // cria o promptzinho
+        line = readline(prompt); // apresenta pro user
         
         // Trata o sinal EOF (Ctrl+D)
         if (line == NULL) {
@@ -29,11 +52,19 @@ int main(int argc, const char *argv[]) {
         }
         
         parse_line(line);
-        print_command_list();
-        free_command_list();
+
+        int status = execute_commands();
         
+        free_command_list();
+        //print_command_list();
+
         free(line); // Liberta a memória alocada por readline
+        
+        if (status == -1) {
+            break; // sai do loop para encerrar o programa
+        }
     }
     
+    clear_history();
     return 0;
 }
