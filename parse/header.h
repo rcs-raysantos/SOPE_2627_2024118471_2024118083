@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -36,6 +37,7 @@ typedef struct command {
     char *infile;
     char *outfile;
     char *errfile;
+    int append;
     int background;
     struct command *next;
 } CMD;

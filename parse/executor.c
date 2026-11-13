@@ -92,6 +92,34 @@ int execute_int(CMD *cmd){ // 1 = é interno | 0 = é externo
     return 0; 
 }
 
+static int apply_redirections(CMD *cmd){
+    int fd;
+
+    if(cmd->infile != NULL){
+        fd = open(cmd->infile, O_RDONLY);
+        if(fd < 0){ perror(cmd->infile); return -1; }
+        if(dup2(fd, STDIN_FILENO) < 0){ perror("dup2 -> STDIN"); close(fd); return -1; }
+        close(fd);
+    }
+
+    if(cmd->outfile != NULL){
+        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
+        fd = open(cmd->outfile, flags, 0644);
+        if(fd < 0){ perror(cmd->outfile); return -1; }
+        if(dup2(fd, STDOUT_FILENO) < 0){ perror("dup2 -> STDOUT"); close(fd); return -1; }
+        close(fd);
+    }
+
+    if(cmd->errfile != NULL){
+        fd = open(cmd->errfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if(fd < 0){ perror(cmd->errfile); return -1; }
+        if(dup2(fd, STDERR_FILENO) < 0){ perror("dup2 -> STDERR"); close(fd); return -1; }
+        close(fd);
+    }
+
+    return 0;
+}
+
 void execute_ext(CMD *cmd){
     pid_t pid = fork();
 
@@ -101,6 +129,7 @@ void execute_ext(CMD *cmd){
     }
 
     if (pid == 0){ //filho
+        if(apply_redirections(cmd) < 0){ _exit(EXIT_FAILURE); }
         execvp(cmd->name, cmd->argv);
         perror("execvp: comando nao encontrado.");
         _exit(EXIT_FAILURE);
@@ -203,6 +232,8 @@ int execute_pipe(void){
                 close(fds[1]); // fecha o duplicado
             }
 
+            if(apply_redirections(cmd) < 0){ exit(EXIT_FAILURE); }
+
             int val = execute_int(cmd);
 
             if(val != 0){
@@ -247,22 +278,43 @@ int execute_pipe(void){
     return 0;
 }
 
+static int is_builtin(const char *name){
+    return strcmp(name, "cd") == 0 || strcmp(name, "pwd") == 0 ||
+           strcmp(name, "echo") == 0 || strcmp(name, "history") == 0 ||
+           strcmp(name, "help") == 0 || strcmp(name, "exit") == 0;
+}
+
+static int execute_builtin_redir(CMD *cmd){
+    int saved_in = dup(STDIN_FILENO);
+    int saved_out = dup(STDOUT_FILENO);
+    int saved_err = dup(STDERR_FILENO);
+    int val = 0;
+
+    if(saved_in < 0 || saved_out < 0 || saved_err < 0){
+        perror("dup");
+    } else if(apply_redirections(cmd) == 0){
+        val = execute_int(cmd);
+    }
+
+    fflush(stdout); /* esvaziar o buffer ANTES de restaurar os descritores */
+
+    if(saved_in >= 0){ dup2(saved_in, STDIN_FILENO); close(saved_in); }
+    if(saved_out >= 0){ dup2(saved_out, STDOUT_FILENO); close(saved_out); }
+    if(saved_err >= 0){ dup2(saved_err, STDERR_FILENO); close(saved_err); }
+
+    return val;
+}
+
 int execute_commands(void){
     if(command_list == NULL || command_list->name == NULL){
         return 0;
     }
     
     if(command_list->next == NULL){
-        int val = execute_int(command_list);
-        
-        if(val == -1){
-            return -1; // sinaliza exit
+        if(is_builtin(command_list->name)){
+            return execute_builtin_redir(command_list) == -1 ? -1 : 0;
         }
-
-        if(val == 0){
-            execute_ext(command_list); // O teu execute_ext CONTINUA VIVO AQUI!
-        }
-
+        execute_ext(command_list);
         return 0;
     }
 
