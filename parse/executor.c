@@ -104,12 +104,18 @@ void execute_ext(CMD *cmd){
         execvp(cmd->name, cmd->argv);
         perror("execvp: comando nao encontrado.");
         exit(-1);
-    } else { //pai
-        int status;
-        if (waitpid(pid, &status, 0) < 0){
+    }
+
+    if (cmd->background){
+        printf("[Processo em background iniciado com PID %d]\n", pid);
+        return; // NAO faz waitpid -> o prompt volta logo
+    }
+    
+    int status;
+    if (waitpid(pid, &status, 0) < 0){
             perror("waitpid");
         }
-    }
+    
 }
 
 int execute_pipe(void){
@@ -137,7 +143,13 @@ int execute_pipe(void){
 
     int cmd_id = 0;
     cmd = command_list;
-
+    int background = 0;
+    for(CMD *c = command_list; c != NULL; c = c->next){
+        if(c->name != NULL){
+            background = c->background; // fica com o do ultimo comando
+        }
+    }
+    
     while(cmd != NULL){
         if(cmd->name == NULL){
             cmd = cmd->next;
@@ -218,11 +230,15 @@ int execute_pipe(void){
         cmd = cmd->next;
     }
 
-    for(int i = 0; i < cmd_id; i++){
-        int status;
-
-        if(waitpid(pids[i], &status, 0) < 0){
-            perror("waitpid");
+    if (background) {
+        printf("[Processo em background iniciado com PID %d]\n",
+               pids[cmd_id - 1]);
+    } else {
+        for (int i = 0; i < cmd_id; i++) {
+            int status;
+            if (waitpid(pids[i], &status, 0) < 0 && errno != ECHILD) {
+                perror("waitpid");
+            }
         }
     }
 

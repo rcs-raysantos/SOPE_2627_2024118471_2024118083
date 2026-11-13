@@ -36,6 +36,7 @@ typedef struct command {
     char *infile;
     char *outfile;
     char *errfile;
+     int background; 
     struct command *next;
 } CMD;
 

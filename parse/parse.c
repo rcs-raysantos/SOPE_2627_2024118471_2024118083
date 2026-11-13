@@ -89,7 +89,9 @@ struct command *insert_command(void) {
     new_cmd->outfile = NULL;
     new_cmd->errfile = NULL;
     new_cmd->next = NULL;
-    
+    new_cmd->errfile = NULL;
+    new_cmd->background = 0;
+    new_cmd->next = NULL;
     // Inserção no fim da lista encadeada
     if (command_list == NULL) {
         command_list = new_cmd;
@@ -158,7 +160,28 @@ void parse_line(char *line) {
                 command->errfile = strdup(errfile);
             }
         }
+        
+        // Operador de background '&'
+        else if (strcmp(a, "&") == 0) {
+            command->background = 1;
+        }
         // Comandos e Argumentos
+        else {
+            size_t len = strlen(a);
+
+            if (len > 1 && a[len - 1] == '&') { // caso "sleep 10&"
+                a[len - 1] = '\0';
+                command->background = 1;
+            }
+
+            if (count < MAXARGS - 1) {
+                if (count == 0) {
+                    command->name = strdup(a);
+                }
+                command->argv[count] = strdup(a);
+                count++;
+            }
+        }
         else {
             if (count < MAXARGS - 1) { // Previne overflow do buffer argv
                 if (count == 0) {
@@ -173,4 +196,5 @@ void parse_line(char *line) {
     if (count < MAXARGS) {
         command->argv[count] = NULL;
     }
+    
 }
