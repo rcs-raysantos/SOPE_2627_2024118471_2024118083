@@ -11,6 +11,20 @@
 
 CMD *command_list = NULL;
 
+static void strip_bg(char *s, CMD *command) {
+    size_t len;
+
+    if (s == NULL) {
+        return;
+    }
+
+    len = strlen(s);
+    if (len > 1 && s[len - 1] == '&') {
+        s[len - 1] = '\0';
+        command->background = 1;
+    }
+}
+
 /*
  * Imprime os comandos presentes na lista encadeada,
  * detalhando argumentos e redirecionamentos de ficheiros.
@@ -139,6 +153,7 @@ void parse_line(char *line) {
         else if (a[0] == '<') {
             infile = a[1] ? a + 1 : strtok(NULL, " \t\r\n");
             if (infile) {
+                strip_bg(infile, command);
                 free(command->infile); // Prevenção contra múltiplos reencaminhamentos
                 command->infile = strdup(infile);
             }
@@ -146,6 +161,7 @@ void parse_line(char *line) {
         else if (a[0] == '>' && a[1] == '>') {
             outfile = a[2] ? a + 2 : strtok(NULL, " \t\r\n");
             if (outfile) {
+                strip_bg(outfile, command);
                 free(command->outfile);
                 command->outfile = strdup(outfile);
                 command->append = 1;
@@ -155,6 +171,7 @@ void parse_line(char *line) {
         else if (a[0] == '>') {
             outfile = a[1] ? a + 1 : strtok(NULL, " \t\r\n");
             if (outfile) {
+                strip_bg(outfile, command);
                 free(command->outfile);
                 command->outfile = strdup(outfile);
                 command->append = 0;
@@ -164,6 +181,7 @@ void parse_line(char *line) {
         else if (a[0] == '2' && a[1] == '>') {
             errfile = a[2] ? a + 2 : strtok(NULL, " \t\r\n");
             if (errfile) {
+                strip_bg(errfile, command);
                 free(command->errfile);
                 command->errfile = strdup(errfile);
             }

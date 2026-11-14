@@ -232,7 +232,7 @@ int execute_pipe(void){
                 close(fds[1]); // fecha o duplicado
             }
 
-            if(apply_redirections(cmd) < 0){ exit(EXIT_FAILURE); }
+            if(apply_redirections(cmd) < 0){ _exit(EXIT_FAILURE); }
 
             int val = execute_int(cmd);
 
