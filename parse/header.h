@@ -1,5 +1,10 @@
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
+
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
+#endif
 
 /*
  *  header.h
@@ -13,6 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -36,6 +42,7 @@ typedef struct command {
     char *infile;
     char *outfile;
     char *errfile;
+    int append;
     int background;
     struct command *next;
 } CMD;
