@@ -129,6 +129,10 @@ void execute_ext(CMD *cmd){
     }
 
     if (pid == 0){ //filho
+        reset_signals_child();
+        if(cmd->background){
+            setpgid(0, 0);
+        }
         if(apply_redirections(cmd) < 0){ _exit(EXIT_FAILURE); }
         execvp(cmd->name, cmd->argv);
         perror("execvp: comando nao encontrado.");
@@ -212,6 +216,10 @@ int execute_pipe(void){
         }
 
         if(pid == 0){ // filho
+            reset_signals_child();
+            if(background){
+                setpgid(0, 0);
+            }
             if(prev_fd != -1){ // se houver pipe anterior vamos duplicar o pipe anterior para leitura
                 if(dup2(prev_fd, STDIN_FILENO) < 0){
                     perror("dup2 -> STDIN");
@@ -237,7 +245,8 @@ int execute_pipe(void){
             int val = execute_int(cmd);
 
             if(val != 0){
-                exit(0);
+                fflush(stdout);
+                _exit(0);
             }
 
             execvp(cmd->name, cmd->argv);
