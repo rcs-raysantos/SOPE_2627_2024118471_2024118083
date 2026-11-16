@@ -1,16 +1,25 @@
-/*
- *  parse.c
- *  parse
+/**
+ * @file parse.c
+ * @brief Implementação do analisador léxico/sintático (parser) de linhas de comandos.
  *
- *  Created by Pedro Sobral on 6/10/26.
- *
+ * Created by Pedro Sobral on 6/10/26.
  */
-
 
 #include "header.h"
 
+/** @brief Ponteiro global para o início da lista ligada de comandos atual. */
 CMD *command_list = NULL;
 
+/**
+ * @brief Verifica e remove o sufixo `&` de uma string, ativando a flag de background.
+ *
+ * Se a string `s` não for `NULL`, tiver comprimento superior a 1 e terminar
+ * com o carácter `'&'`, substitui-o por `'\0'` (modificando `s` in-place) e
+ * define `command->background = 1`.
+ *
+ * @param s String a verificar e eventualmente truncar (tipicamente um nome de ficheiro).
+ * @param command Ponteiro para a estrutura `CMD` cuja flag `background` será atualizada.
+ */
 static void strip_bg(char *s, CMD *command) {
     size_t len;
 
@@ -25,9 +34,12 @@ static void strip_bg(char *s, CMD *command) {
     }
 }
 
-/*
- * Imprime os comandos presentes na lista encadeada,
- * detalhando argumentos e redirecionamentos de ficheiros.
+/**
+ * @brief Imprime os comandos presentes na lista ligada.
+ *
+ * Percorre `command_list` e apresenta no `stdout` o nome, os argumentos
+ * (`argv`) e os ficheiros de redirecionamento (`infile`, `outfile` e `errfile`)
+ * de cada nó `CMD`, sendo útil para depuração.
  */
 void print_command_list(void) {
     CMD *temp;
@@ -49,9 +61,12 @@ void print_command_list(void) {
     }
 }
 
-/*
- * Liberta toda a memória alocada dinamicamente para a lista de comandos.
- * Garante a libertação de strings internas e da própria estrutura do nó.
+/**
+ * @brief Liberta toda a memória alocada dinamicamente para a lista de comandos.
+ *
+ * Percorre `command_list`, libertando o nome do comando, todas as strings
+ * alocadas em `argv`, os caminhos de redirecionamento (`infile`, `outfile`,
+ * `errfile`) e cada estrutura `CMD`, repondo `command_list` a `NULL`.
  */
 void free_command_list(void) {
     CMD *current = command_list;
@@ -82,8 +97,15 @@ void free_command_list(void) {
     command_list = NULL;
 }
 
-/*
- * Cria e inicializa um novo nó do tipo CMD e adiciona-o ao fim da lista encadeada.
+/**
+ * @brief Cria e inicializa um novo nó `CMD`, inserindo-o no fim da lista ligada.
+ *
+ * Aloca memória para uma nova estrutura `CMD`, inicializa todos os seus ponteiros
+ * a `NULL` e flags a `0`, e anexa-a ao final de `command_list`. Em caso de
+ * falha de alocação, imprime erro com `perror` e termina o programa com
+ * `EXIT_FAILURE`.
+ *
+ * @return struct command* Ponteiro para a nova estrutura `CMD` inserida na lista.
  */
 struct command *insert_command(void) {
     int i;
@@ -119,8 +141,18 @@ struct command *insert_command(void) {
     return new_cmd;
 }
 
-/*
- * Analisa uma linha de comandos (string) e preenche a lista encadeada de comandos.
+/**
+ * @brief Analisa uma linha de comandos e preenche a lista ligada `command_list`.
+ *
+ * Liberta eventuais comandos anteriores em `command_list`. Se `line` for válida
+ * e não vazia, divide-a em tokens usando `strtok` (modificando `line` in-place)
+ * e interpreta:
+ * - Pipes (`|`), criando novos nós `CMD` na lista;
+ * - Redirecionamentos de entrada (`<`), saída (`>`, `>>`) e erro (`2>`);
+ * - Execução em segundo plano (`&`, isolado ou colado ao último token);
+ * - Nome do comando e até `MAXARGS - 1` argumentos terminados em `NULL`.
+ *
+ * @param line String mutável contendo a linha de comandos a analisar.
  */
 void parse_line(char *line) {
     char *a;
