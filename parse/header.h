@@ -56,3 +56,5 @@ void parse_line(char *);
 
 void build_prompt(char *str, size_t size);
 int execute_commands();
+void setup_signals(void);
+void reset_signals_child(void);

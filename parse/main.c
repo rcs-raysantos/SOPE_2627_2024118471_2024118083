@@ -27,8 +27,10 @@ void build_prompt(char *str, size_t size){
         ANSI_YELLOW, cwd, ANSI_RESET);
 }
 
-int main(int argc, const char *argv[]) {
+int main(void) {
     char *line, prompt[2048];
+
+    setup_signals();
     
     while (1) {
         build_prompt(prompt, sizeof(prompt)); // cria o promptzinho
