@@ -1,8 +1,6 @@
 /**
  * @file parse.c
  * @brief Implementação do analisador léxico/sintático (parser) de linhas de comandos.
- *
- * Created by Pedro Sobral on 6/10/26.
  */
 
 #include "header.h"
