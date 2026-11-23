@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -pedantic -pthread -std=c11 -D_POSIX_C_SOURCE=200809L -D_
 LDFLAGS = -lreadline
 
 # Nome do executável final
-TARGET = parse
+TARGET = minishell
 
 # Ficheiros de código fonte e objetos
 SRCS = main.c parse.c executor.c signals.c
