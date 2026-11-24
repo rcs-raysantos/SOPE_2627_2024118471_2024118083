@@ -1,5 +1,11 @@
 #include "header.h"
 
+/**
+ * @brief Apresenta o menu de ajuda com os comandos internos disponíveis.
+ *
+ * Imprime no ecrã (stdout) a lista de comandos internos suportados pela
+ * minishell e uma breve descrição da funcionalidade de cada um.
+ */
 void builtin_help(void){
     printf("-------- COMANDOS INTERNOS DISPONIVEIS: --------\n");
     printf("cd <diretoria> -> Altera a diretoria de trabalho atual.\n");
@@ -10,6 +16,16 @@ void builtin_help(void){
     printf("help -> Apresenta este menu de ajuda.\n"); // --> retirar?? <--
 }
 
+/**
+ * @brief Altera a diretoria de trabalho atual (comando interno `cd`).
+ *
+ * Muda o diretório atual para o caminho especificado em `cmd->argv[1]`.
+ * Caso não seja fornecido nenhum argumento, tenta obter o diretório a partir
+ * da variável de ambiente `HOME`. Exibe uma mensagem de erro via `perror`
+ * caso `HOME` não esteja definida ou se `chdir` falhar.
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` que contém os argumentos do comando.
+ */
 void builtin_cd(CMD *cmd){
     char *pasta = cmd->argv[1];
 
@@ -27,6 +43,12 @@ void builtin_cd(CMD *cmd){
     }
 }
 
+/**
+ * @brief Imprime o caminho absoluto da diretoria de trabalho atual (`pwd`).
+ *
+ * Obtém o diretório atual através de `getcwd` e imprime-o no `stdout`.
+ * Em caso de erro, apresenta uma mensagem descritiva via `perror`.
+ */
 void builtin_pwd(void){
     char cwd[1024];
 
@@ -37,6 +59,12 @@ void builtin_pwd(void){
     }
 }
 
+/**
+ * @brief Apresenta o histórico de comandos executados (`history`).
+ *
+ * Obtém a lista de entradas do histórico da biblioteca Readline através de
+ * `history_list()` e imprime cada linha numerada sequencialmente a partir de 1.
+ */
 void builtin_history(void){
     HIST_ENTRY **historico = history_list();
 
@@ -47,8 +75,16 @@ void builtin_history(void){
     }
 }
 
+/**
+ * @brief Imprime no ecrã os argumentos passados ao comando (`echo`).
+ *
+ * Percorre os argumentos em `cmd->argv` a partir do índice 1, imprimindo-os
+ * separados por um espaço simples e terminando com uma quebra de linha (`\n`).
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` que contém os argumentos a imprimir.
+ */
 void builtin_echo(CMD *cmd){
-    for(int i = 1; cmd->argv[i] != NULL; i++){
+    for(int i = 1; cmd->argv[i] != NULL; i++){ // de cada argumento ele imprime char a char
         printf("%s", cmd->argv[i]);
 
         if(cmd->argv[i + 1] != NULL){
@@ -59,6 +95,18 @@ void builtin_echo(CMD *cmd){
     printf("\n");
 }
 
+/**
+ * @brief Identifica e executa um comando interno da minishell.
+ *
+ * Verifica se o nome do comando (`cmd->name`) corresponde a um dos comandos
+ * internos suportados (`cd`, `pwd`, `echo`, `history`, `help` ou `exit`) e
+ * invoca a respetiva função.
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` do comando a avaliar/executar.
+ * @return int Retorna `1` se um comando interno foi executado, `-1` se o comando
+ *             for `exit` (sinalizando o término da shell), ou `0` caso seja um
+ *             comando externo.
+ */
 int execute_int(CMD *cmd){ // 1 = é interno | 0 = é externo
     if(strcmp(cmd->name, "cd") == 0){
         builtin_cd(cmd);
@@ -92,6 +140,18 @@ int execute_int(CMD *cmd){ // 1 = é interno | 0 = é externo
     return 0; 
 }
 
+/**
+ * @brief Aplica os redirecionamentos de entrada, saída e erro de um comando.
+ *
+ * Abre os ficheiros especificados em `cmd->infile` (leitura para `STDIN_FILENO`),
+ * `cmd->outfile` (escrita ou anexação para `STDOUT_FILENO`, consoante `cmd->append`)
+ * e `cmd->errfile` (escrita truncada para `STDERR_FILENO`), redirecionando os
+ * respetivos descritores através de `dup2`.
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` com os caminhos de redirecionamento.
+ * @return int Retorna `0` em caso de sucesso ou `-1` se ocorrer algum erro ao
+ *             abrir os ficheiros ou duplicar os descritores.
+ */
 static int apply_redirections(CMD *cmd){
     int fd;
 
@@ -120,6 +180,17 @@ static int apply_redirections(CMD *cmd){
     return 0;
 }
 
+/**
+ * @brief Executa um comando externo num processo filho.
+ *
+ * Cria um novo processo com `fork()`. No processo filho, repõe os sinais com
+ * `reset_signals_child()`, isola o grupo de processos caso seja em background
+ * (`setpgid`), aplica redirecionamentos e substitui a imagem do processo usando
+ * `execvp`. No processo pai, se `cmd->background` estiver ativo, imprime o PID e
+ * retorna imediatamente; caso contrário, aguarda o término do filho via `waitpid`.
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` do comando externo a executar.
+ */
 void execute_ext(CMD *cmd){
     pid_t pid = fork();
 
@@ -151,6 +222,18 @@ void execute_ext(CMD *cmd){
     
 }
 
+/**
+ * @brief Executa uma sequência de comandos ligados por pipes.
+ *
+ * Percorre a lista global `command_list`, cria os pipes necessários entre
+ * comandos consecutivos e lança um processo filho por cada comando. Configura
+ * os descritores de entrada/saída via `dup2`, aplica redirecionamentos locais e
+ * executa comandos internos (no processo filho) ou externos (`execvp`). Se o
+ * último comando tiver `background` ativo, imprime o respetivo PID e não espera;
+ * caso contrário, aguarda pela conclusão de todos os processos filhos.
+ *
+ * @return int Retorna sempre `0`.
+ */
 int execute_pipe(void){
     CMD *cmd;
     int fds[2];
@@ -287,12 +370,34 @@ int execute_pipe(void){
     return 0;
 }
 
+/**
+ * @brief Verifica se um nome corresponde a um comando interno.
+ *
+ * Compara a string `name` com os comandos internos suportados pela minishell
+ * (`cd`, `pwd`, `echo`, `history`, `help` e `exit`).
+ *
+ * @param name String com o nome do comando a verificar.
+ * @return int Retorna diferente de zero (`1`) se for um comando interno, ou `0`
+ *             caso contrário.
+ */
 static int is_builtin(const char *name){
     return strcmp(name, "cd") == 0 || strcmp(name, "pwd") == 0 ||
            strcmp(name, "echo") == 0 || strcmp(name, "history") == 0 ||
            strcmp(name, "help") == 0 || strcmp(name, "exit") == 0;
 }
 
+/**
+ * @brief Executa um comando interno preservando os descritores padrão após redirecionamento.
+ *
+ * Guarda cópias dos descritores `STDIN_FILENO`, `STDOUT_FILENO` e `STDERR_FILENO`
+ * através de `dup()`, aplica os redirecionamentos definidos em `cmd`, executa o
+ * comando interno via `execute_int()`, força o esvaziamento do buffer de saída
+ * (`fflush(stdout)`) e restaura os descritores originais da shell.
+ *
+ * @param cmd Ponteiro para a estrutura `CMD` do comando interno a executar.
+ * @return int Retorna o valor devolvido por `execute_int(cmd)` (`1` ou `-1`), ou
+ *             `0` caso ocorra falha ao duplicar descritores ou aplicar redirecionamentos.
+ */
 static int execute_builtin_redir(CMD *cmd){
     int saved_in = dup(STDIN_FILENO);
     int saved_out = dup(STDOUT_FILENO);
@@ -314,6 +419,18 @@ static int execute_builtin_redir(CMD *cmd){
     return val;
 }
 
+/**
+ * @brief Ponto de entrada principal para a execução da lista de comandos.
+ *
+ * Analisa a variável global `command_list`:
+ * - Se estiver vazia ou sem nome de comando, não executa nada.
+ * - Se contiver apenas um comando, executa-o como interno (com suporte a
+ *   redirecionamentos via `execute_builtin_redir`) ou como externo (`execute_ext`).
+ * - Se contiver múltiplos comandos encadeados, delega a execução para `execute_pipe`.
+ *
+ * @return int Retorna `-1` caso tenha sido executado o comando `exit` para
+ *             terminar a minishell, ou `0` nos restantes casos.
+ */
 int execute_commands(void){
     if(command_list == NULL || command_list->name == NULL){
         return 0;
